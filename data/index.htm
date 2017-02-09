@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<html manifest="cache.manifest">
+<head>
+	<title>Loading...</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta charset="utf-8">
+	
+	<!-- iOS WebApp specific -->
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<meta name="apple-mobile-web-app-title" content="LYT">
+	<link rel="apple-touch-icon-precomposed" href="http://lyt.naaa.de/images/icon200x200.png">
+	
+	<!-- JQuery and JQMobile -->
+	<script src="http://lyt.naaa.de/jquery-2.1.4.min.js"></script>
+	<script src="http://lyt.naaa.de/jquery.mobile-1.4.5.min.js"></script>
+	<link rel="stylesheet" href="http://lyt.naaa.de/jquery.mobile-1.4.5.min.css" />
+	
+	<!-- color picker -->
+	<link rel="stylesheet" type="text/css" href="http://lyt.naaa.de/spectrum.css">
+	<script type="text/javascript" src="http://lyt.naaa.de/spectrum.js"></script>
+	<style>
+	#staticcolor .sp-container {
+		width: 100%;
+		max-width: 450px;
+	}
+
+	#staticcolor .sp-picker-container {
+		width: calc(80%);
+		width: calc(100% - 20px);
+	}
+	
+	.quickButtons {
+		text-align: center !important;
+	}
+	</style>
+
+	<script type="text/javascript">
+	var _getInProgress = false;
+	var _queueFunc = null;
+	var _queueURL = null;
+	
+	// set timeout in case the server responds very slow or not at all
+	// also applies to GET requests, since they are build onto AJAX requests
+	$.ajaxSetup({timeout: 6000}); 
+	
+	// refresh values from server if this IntervallTimer is active
+	var pollTimer; 
+	
+	function pollAll() {
+		$.get("/all", function( data ) {			
+			var color = tinycolor("rgb("+data.red+","+data.green+","+data.blue);
+			
+			// only update the colorpicker if color has changed
+			//if (color.toHexString() != $("#flat").spectrum('get').toHexString()) {
+				$("#flat").spectrum("set", color);
+				$("#flat").spectrum("reflow");
+				$("#flat").spectrum("set", color);
+				$("#flat").spectrum("show");
+			//}
+
+			var txtcolor = tinycolor.mostReadable(color, ["#afafaf", "#000"]);
+			$("#cvalue,#current_color").css("background-color", color.toHexString());
+			$("#cvalue,#current_color").css("color", txtcolor.toHexString());
+			$("#cvalue,#current_color").text("R: "+data.red+", "+"G: "+data.green+", "+"B: "+data.blue);
+
+			debug("Uptime: "+ data.uptime.toString());
+			
+			$("#current_state").text(data.state);
+		});
+	}
+	
+	function debug(text) {
+		$(".deb").text(text)
+			.stop()
+			.animate({opacity: '1'}, 100)
+			.animate({opacity: '0'}, 4000);
+	}
+	
+	function myGet(URL, func) {
+		// if we are still busy (server did not respond yet), queue this new request, overwrite previously queued request
+		if (_getInProgress) {
+			_queueFunc = func, _queueURL = URL;
+			console.log("kept the last request, GET still busy...");
+			return;
+		}
+	
+		console.log("requesting: "+URL);
+		_getInProgress = true;
+		
+		// initiate communication with server via HTTP GET request
+		var jqxhr = $.get(URL, function( data ) {
+			// GET returns without error, execute passed function
+			func(data);
+			})
+			.done(function() {
+				console.log("AJAX returned without errors");
+			})
+			.fail(function() {
+				console.log("AJAX returned with ERROR!");
+			})
+			.always(function() {
+				console.log("AJAX returned");
+				
+				_getInProgress = false;
+				
+				// check if there is a queued request
+				if (_queueURL != null && _queueFunc != null) {
+					var _dequeueURL = _queueURL, _dequeueFunc = _queueFunc;
+					_queueURL = null;
+					_queueFunc = null;
+					console.log("GET not busy anymore, dequeue");
+					
+					// recursive call
+					myGet(_dequeueURL, _dequeueFunc);
+				}
+			});
+	}
+  
+    $( document ).ready(function() {
+		/* start a timer */
+		pollTimer = setInterval(pollAll, 1000);
+    
+		/* init the color picker */
+		$("#flat").spectrum({
+			flat: true,
+			showInput: false,
+			showButtons: false,
+			preferredFormat: "rgb",
+			move: function(color) {
+				var txtcolor = tinycolor.mostReadable(color, ["#afafaf", "#000"]);
+				$("#cvalue").css("background-color", color.toHexString());
+				$("#cvalue").css("color", txtcolor.toHexString());
+
+				$("#cvalue").text("R: "+Math.round(color._r).toString()+", " +
+					"G: "+Math.round(color._g).toString()+", " +
+					"B: "+Math.round(color._b).toString()/*+", " +
+					"W: "+Math.round(255-color._a*255).toString()*/ );
+
+				myGet("/color?"+
+					"red="+Math.round(color._r).toString()+"&" +
+					"green="+Math.round(color._g).toString()+"&" +
+					"blue="+Math.round(color._b).toString(), function( data ) {
+						//$(".deb").text("GET done: "+JSON.stringify(data));
+					});
+			}
+		});
+
+		$('.sp-val,.sp-hue').on('touchstart mousedown', function(evt) { clearInterval(pollTimer); });
+		$('.sp-val,.sp-hue').on('touchend mouseup', function(evt) { clearInterval(pollTimer); pollTimer = setInterval(pollAll, 1000); });
+		
+		$("#startupcolor").spectrum({
+			preferredFormat: "hex",
+			localStorageKey: "lyt8266",
+			showPalette: true
+		});
+		
+		$(document.body).on('pageshow', function(evt) {
+			if( $.mobile.activePage.attr("id") != "config" ) {
+				clearInterval(pollTimer);
+				pollAll(); 
+				pollTimer = setInterval(pollAll, 1000);
+				return;
+			}
+		
+			clearInterval(pollTimer);
+
+			$("#configform input").prop("disabled", true);
+			$("#configform input[type='radio']").checkboxradio("refresh");
+			
+			$.get("/config.json", function( data ) {	
+				$("#configform input").prop("disabled", false);
+				$("input[name='opmode']:checked").removeAttr("checked");
+				$("input[name='opmode']").val([data.state]).checkboxradio("refresh");
+				
+				$("#remoteurl").val(data.remoteurl);
+				$("#startupcolor").spectrum("set", data.hexcolor);
+				$("#hostname").val(data.hostname);
+				
+				$("#configform input[type='radio']").checkboxradio("refresh");
+			});
+		});
+		
+		$('#configform').on('submit', function(evt) {
+			//convert the color value to something easy to digest at the controller side
+			var newcolor = $("#startupcolor").spectrum('get').toHexString();
+			var color = tinycolor(newcolor);
+			$("input[name='startupcolor_r']").val(Math.round(color._r).toString());
+			$("input[name='startupcolor_g']").val(Math.round(color._g).toString());
+			$("input[name='startupcolor_b']").val(Math.round(color._b).toString());
+			
+			// transmit form
+			$.get("/config.json?"+$('#configform').serialize(), function( data ) {
+				debug("values submitted");
+				$.mobile.back();
+			});
+
+			evt.preventDefault();
+		});
+		
+		$('.quickButtons,#sOn,#sOff,#sRC,#sCC').on('click', function(evt, ui) {
+			debug($(this).attr("href"));
+			evt.preventDefault();
+			
+			$.get($(this).attr("href"), function( data ) {
+				debug("done");
+			});
+		});
+		
+		$('#rebootbtn').on('click', function(evt, ui) {
+			debug('Sending restart command...');
+			$.get("/reset", function( data ) {
+				debug(data);
+				$.mobile.back();
+			});
+		});
+	});
+	</script>
+</head>
+
+<body>
+	<!-- Overview Page -->
+	<div id="overview" data-role="page">
+		<div data-role="header">
+			<h1 id="title">Overview</h1>
+			<a href="#config" data-transition="pop" class="ui-btn ui-corner-all ui-shadow ui-icon-gear ui-btn-icon-notext ui-btn-right">Startup Config</a>
+			<div data-role="navbar">
+				<ul>
+					<li><a href="#overview" data-transition="fade" data-icon="home">Overview</a></li>
+					<li><a href="#staticcolor" data-transition="fade" data-icon="star">Static Color</a></li>
+				</ul>
+			</div>
+		</div>
+
+		<div data-role="content">
+			<ul data-role="listview">
+				<li><div id="current_state" style="text-align: center">Current State</div></li>
+				<li><div id="current_color" style="text-align: center">Color Value</div></li>
+				<li><a class="ui-btn ui-corner-all ui-shadow quickButtons" id="sOn" href="/color?red=255&green=255&blue=255">On</a></li>
+				<li><a class="ui-btn ui-corner-all ui-shadow quickButtons" id="sOff" href="/color?red=0&green=0&blue=0">Off</a></li>
+				<li><a class="ui-btn ui-corner-all ui-shadow quickButtons" id="sRC" href="/state?state=remotecontrol">Remotecontrolled</a></li>
+				<li><a class="ui-btn ui-corner-all ui-shadow quickButtons" id="sCC" href="/state?state=constantcolor">Constant Color</a></li>
+			</ul>
+		</div>
+	
+		<div data-role="footer" data-position="fixed">
+			<div class="deb">...</div>
+		</div>
+	</div>
+
+	<!-- Static Color Page -->
+	<div id="staticcolor" data-role="page">
+		<div data-role="header">
+			<h1 id="title">Static Color</h1>
+			<a href="#config" data-transition="pop" class="ui-btn ui-corner-all ui-shadow ui-icon-gear ui-btn-icon-notext ui-btn-right">Startup Config</a>
+			<div data-role="navbar">
+				<ul>
+					<li><a href="#overview" data-transition="fade" data-icon="home">Overview</a></li>
+					<li><a href="#staticcolor" data-transition="fade" data-icon="star">Static Color</a></li>
+				</ul>
+			</div>
+		</div>
+
+		<div data-role="content">
+			<div id="cvalue" style="text-align: center">Color Value</div>
+			<form>
+				<center>
+					<input type='text' id="flat" />
+				</center>
+			</form>
+		</div>
+	
+		<div data-role="footer" data-position="fixed">
+			<div class="deb">...</div>
+		</div>
+	</div>
+	
+	<!-- Config Page -->
+	<div id="config" data-role="page" data-dialog="true" data-close-btn="right">
+		<div data-role="header">
+			<h1>Startup Settings</h1>
+		</div>
+		<div data-role="content">
+			<form method="get" action="/config.json" id="configform">
+				<div class="ui-field-contain">
+					<fieldset data-role="controlgroup" data-type="vertical">
+						<legend>Operating mode:</legend>
+						<input type="radio" name="opmode" id="opmode-1" value="remotecontrol"  />
+						<label for="opmode-1">Remote Control</label>
+						<input type="radio" name="opmode" id="opmode-2" value="constantcolor" />
+						<label for="opmode-2">Constant Color</label>
+					</fieldset>
+				</div>
+	
+				<div class="ui-field-contain">
+					<label for="remoteurl">Remote Control URL:</label>
+					<input type="text" name="remoteurl" id="remoteurl" value="http://lyt.naaa.de"  />
+				</div>
+				
+				<div class="ui-field-contain">
+					<label for="startupcolor">Startup Color:</label>
+					<input type='text' id='startupcolor' name='startupcolor' />
+					<input type="hidden" name="startupcolor_r" />
+					<input type="hidden" name="startupcolor_g" />
+					<input type="hidden" name="startupcolor_b" />
+				</div>
+				
+				<div class="ui-field-contain">
+					<label for="hostname">Hostname:</label>
+					<input type="text" name="hostname" id="hostname" value="LYT8266"  />
+				</div>
+			
+				<input type="submit" class="ui-btn" value="Save Settings" />
+				<input type="button" class="ui-btn" id="rebootbtn" value="Apply Settings" />
+				<a href="/" class="ui-btn ui-corner-all ui-shadow" data-rel="back">Cancel</a>
+			</form>
+		</div>
+	</div>
+  
+	
+</body>
+</html>
