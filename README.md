@@ -12,3 +12,4 @@ Features:
 - Several clients can control the lamp in parallel
 - changes to firmware are only possible after accessing a special URL
 - allows HTTP Update of firmware
+- provides a FiFo log of latest 100 Log-messages accessible at http://lyt8266/log
