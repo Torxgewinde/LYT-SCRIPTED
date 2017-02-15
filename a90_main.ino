@@ -24,7 +24,7 @@
 #include <Ticker.h>
 
 Ticker timer;
-bool checkURL = true;
+bool checkURL;
 
 /******************************************************************************
 Description.: read config file from SPIFFS
@@ -36,11 +36,12 @@ bool loadConfig() {
   
   if (!configFile || (configFile.size() > 1024)) {
     g_hostname = "LYT8266";
-    g_remoteurl = "http://lyt.naaa.de";
+    g_remoteurl = "http://lyt.naaa.de/";
     state = CONSTANTCOLOR;
     g_red = 255;
     g_green = 0;
     g_blue = 0;
+    g_delay_before_going_remotecontrolled = 0;
     
     return false;
   }
@@ -72,6 +73,8 @@ bool loadConfig() {
   g_red = json["r"];
   g_green = json["g"];
   g_blue = json["b"];
+  
+  g_delay_before_going_remotecontrolled = json["delay_before_going_remotecontrolled"];
 
   return true;
 }
@@ -139,7 +142,7 @@ void setup(void){
 
   // read configuration file
   bool r = loadConfig();
-  Log("loadConfig(): "+String(r));
+  Log("loadConfig() --> result: "+String(r));
 
   // apply hostname
   wifi_station_set_hostname((char *)g_hostname.c_str());
@@ -148,9 +151,21 @@ void setup(void){
   setup_wifi();
   setup_webserver();
 
-  // setup the animation as timer (Ticker)
-  // create a new frame every 60 seconds
-  timer.attach(60.0, [](){checkURL = true;});
+  if( g_delay_before_going_remotecontrolled < 60 ) checkURL = true;
+
+  // setup timer (Ticker) to check every 60 seconds an URL for color values
+  timer.attach(60.0, [](){
+
+    // postpone URL check if a delay was set
+    if (g_delay_before_going_remotecontrolled > 60) {
+      Log("Postponed URL check, because g_delay_before_going_remotecontrolled is "+ String(g_delay_before_going_remotecontrolled));
+      g_delay_before_going_remotecontrolled -= 60;
+      return;
+    }
+    
+    g_delay_before_going_remotecontrolled = 0;
+    checkURL = true;
+  });
 }
 
 /******************************************************************************

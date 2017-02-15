@@ -225,6 +225,7 @@ void handleConfigGET() {
     root["g"] = server.arg("startupcolor_g").toInt();
     root["b"] = server.arg("startupcolor_b").toInt();
     root["hexcolor"] = server.arg("startupcolor");
+    root["delay_before_going_remotecontrolled"] = server.arg("delay_before_going_remotecontrolled");
 
     // store to file
     File fsConfig = SPIFFS.open("/config.json", "w");

@@ -27,22 +27,25 @@
 enum STATES {UNDEF=0, CONSTANTCOLOR=1, REMOTEURL=2, BOOTUP=3, FLASH=4};
 STATES state = UNDEF;
 
-/* Details for state CONSTANT_COLOR
+/* Variables for RGB (and implicitly white) color
    Note that RGB and White LEDs are not supposed to be lit at the same time */
-uint8_t g_red=1, g_green=1, g_blue=255;
+uint8_t g_red, g_green, g_blue;
 
-/* Hostname */
-String g_hostname = "LYT8266";
+/* Hostname, this name will show up in DHCP requests */
+String g_hostname;
 
-/* remote URL */
-String g_remoteurl = "http://lyt.naaa.de";
+/* remote URL, this will be used to poll a color value */
+String g_remoteurl;
+
+/* an optional delay in seconds before switching from bootup to remoteURL */
+uint16_t g_delay_before_going_remotecontrolled;
 
 /* Storage for most recent logging messages */
 std::deque<String> log_messages;
 
 #define LOG_LENGTH 100
 
-/* logging messages, delete old entries */
+/* logging messages, maintain length of entries */
 void Log(String text) {
   log_messages.push_back(text);
   log_messages.pop_front();

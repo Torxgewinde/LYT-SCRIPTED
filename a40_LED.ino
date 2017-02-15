@@ -66,7 +66,7 @@ void setup_LEDs() {
   analogWriteFreq(500);
   analogWriteRange(255);
   
-  setLeds(0,0,255);
+  setLeds(g_red, g_green, g_blue);
   digitalWrite(POWER_ENABLE_LED, 1);
 }
 
