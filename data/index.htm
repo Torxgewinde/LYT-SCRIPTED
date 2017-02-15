@@ -177,6 +177,7 @@
 				$("#remoteurl").val(data.remoteurl);
 				$("#startupcolor").spectrum("set", data.hexcolor);
 				$("#hostname").val(data.hostname);
+				$("#delay_before_going_remotecontrolled").val(data.delay_before_going_remotecontrolled);
 				
 				$("#configform input[type='radio']").checkboxradio("refresh");
 			});
@@ -296,6 +297,11 @@
 				<div class="ui-field-contain">
 					<label for="remoteurl">Remote Control URL:</label>
 					<input type="text" name="remoteurl" id="remoteurl" value="http://lyt.naaa.de"  />
+				</div>
+				
+				<div class="ui-field-contain">
+					<label for="delay_before_going_remotecontrolled">Seconds before checking URL starts:</label>
+					<input type="number" name="delay_before_going_remotecontrolled" id="delay_before_going_remotecontrolled" value="0" min="0" step="1" />
 				</div>
 				
 				<div class="ui-field-contain">
