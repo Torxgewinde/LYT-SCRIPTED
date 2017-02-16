@@ -13,3 +13,5 @@ Features:
 - changes to firmware are only possible after accessing a special URL
 - allows HTTP Update of firmware
 - provides a FiFo log of latest 100 Log-messages accessible at http://lyt8266/log
+
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/ZmReog0DOrA/0.jpg)](http://www.youtube.com/watch?v=ZmReog0DOrA "LYT-Scripted")
