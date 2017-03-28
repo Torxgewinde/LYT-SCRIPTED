@@ -24,7 +24,7 @@
 #include <Ticker.h>
 
 Ticker timer1, timer2;
-bool checkURL;
+bool checkURL = true;
 
 /******************************************************************************
 Description.: read config file from SPIFFS
@@ -74,15 +74,17 @@ bool loadConfig() {
       break;
     }
   }
+
+  // depending on the value of variable g_delay_before_going_remotecontrolled
+  // this will be reverted after the specified amount of seconds
   if(state == REMOTEURL) { 
     state = REMOTEURL_POSTPONED;
   }
+  g_delay_before_going_remotecontrolled = json["delay_before_going_remotecontrolled"];
   
   g_red = json["r"];
   g_green = json["g"];
   g_blue = json["b"];
-  
-  g_delay_before_going_remotecontrolled = json["delay_before_going_remotecontrolled"];
 
   return true;
 }
@@ -159,10 +161,6 @@ void setup(void){
   setup_wifi();
   setup_webserver();
 
-  if( g_delay_before_going_remotecontrolled < 60 ) {
-    checkURL = true;
-  }
-
   // setup timer (Ticker) to check every 60 seconds an URL for color values
   timer1.attach(60.0, [](){
     checkURL = true;
@@ -188,7 +186,7 @@ void setup(void){
       state = REMOTEURL;
     }
 
-    // job is done, remove this task from timer2
+    // job is done, remove this lambda function from timer2
     timer2.detach();
   });
 }
