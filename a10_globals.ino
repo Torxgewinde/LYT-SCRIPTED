@@ -23,8 +23,23 @@
 #include <ArduinoJson.h>
 #include <deque>
 
-/* global variables */
-enum STATES {UNDEF=0, CONSTANTCOLOR=1, REMOTEURL=2, BOOTUP=3, FLASH=4};
+//determine array length
+#define LENGTH_OF(x) (sizeof(x)/sizeof(x[0]))
+
+/* current state of the device */
+enum STATES {UNDEF=0, CONSTANTCOLOR, REMOTEURL, REMOTEURL_POSTPONED, BOOTUP, FLASH};
+struct {
+  STATES state;
+  String human_readable_string;
+  String state_as_string;
+} state_map[] = {
+  { UNDEF, "Undefined State", "undef" },
+  { CONSTANTCOLOR,"Static Color Mode", "constantcolor" },
+  { REMOTEURL, "Polling Remote Address", "remotecontrol" },
+  { REMOTEURL_POSTPONED, "Waiting before polling", "remotecontrol_postponed" },
+  { BOOTUP, "Booting up...", "bootup" },
+  { FLASH, "Flashing Firmware...", "flash" }
+};
 STATES state = UNDEF;
 
 /* Variables for RGB (and implicitly white) color

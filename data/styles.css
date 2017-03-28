@@ -1,0 +1,13 @@
+#staticcolor .sp-container {
+	width: 100%;
+	max-width: 450px;
+}
+
+#staticcolor .sp-picker-container {
+	width: calc(80%);
+	width: calc(100% - 20px);
+}
+	
+.quickButtons {
+	text-align: center !important;
+}

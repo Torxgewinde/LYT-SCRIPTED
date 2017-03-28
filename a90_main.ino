@@ -23,7 +23,7 @@
 #include <ESP8266HTTPClient.h>
 #include <Ticker.h>
 
-Ticker timer;
+Ticker timer1, timer2;
 bool checkURL;
 
 /******************************************************************************
@@ -65,11 +65,19 @@ bool loadConfig() {
 
   g_hostname = strdup(json["hostname"]);
   g_remoteurl = strdup(json["remoteurl"]);
-  if( !strcmp(json["state"], "remotecontrol") ) {
-    state = REMOTEURL;
-  } else {
-    state = CONSTANTCOLOR;
+
+  /* read state from config file, will be UNDEF if string from config is not found */
+  state = UNDEF;
+  for(int i=0; i<LENGTH_OF(state_map); i++) {
+    if(state_map[i].state_as_string == json["state"]) {
+      state = state_map[i].state;
+      break;
+    }
   }
+  if(state == REMOTEURL) { 
+    state = REMOTEURL_POSTPONED;
+  }
+  
   g_red = json["r"];
   g_green = json["g"];
   g_blue = json["b"];
@@ -134,11 +142,11 @@ void setup(void){
   //SPIFFS.format();
   
   Serial.begin(115200);
-  Serial.println("ESP Controller starting up\nComplied at: " __DATE__ " - " __TIME__);
+  Serial.println("LYT8266 starting up\nCompiled at: " __DATE__ " - " __TIME__);
 
   log_messages.resize(LOG_LENGTH, "-");
-  Log("ESP Controller starting up");
-  Log("Complied at: " __DATE__ " - " __TIME__);
+  Log("LYT8266 starting up");
+  Log("Compiled at: " __DATE__ " - " __TIME__);
 
   // read configuration file
   bool r = loadConfig();
@@ -151,20 +159,37 @@ void setup(void){
   setup_wifi();
   setup_webserver();
 
-  if( g_delay_before_going_remotecontrolled < 60 ) checkURL = true;
+  if( g_delay_before_going_remotecontrolled < 60 ) {
+    checkURL = true;
+  }
 
   // setup timer (Ticker) to check every 60 seconds an URL for color values
-  timer.attach(60.0, [](){
+  timer1.attach(60.0, [](){
+    checkURL = true;
+  });
 
+  // Count down value if URL check is to be postponed
+  timer2.attach(1.0, [](){
+    
     // postpone URL check if a delay was set
-    if (g_delay_before_going_remotecontrolled > 60) {
+    if (g_delay_before_going_remotecontrolled > 0) {
       Log("Postponed URL check, because g_delay_before_going_remotecontrolled is "+ String(g_delay_before_going_remotecontrolled));
-      g_delay_before_going_remotecontrolled -= 60;
+      if(state == REMOTEURL) { 
+        state = REMOTEURL_POSTPONED;
+      }
+      g_delay_before_going_remotecontrolled -= 1;
       return;
     }
-    
+
+    // if control reaches this point the delay has passed, clean up and stop this timer
     g_delay_before_going_remotecontrolled = 0;
-    checkURL = true;
+
+    if(state == REMOTEURL_POSTPONED) { 
+      state = REMOTEURL;
+    }
+
+    // job is done, remove this task from timer2
+    timer2.detach();
   });
 }
 

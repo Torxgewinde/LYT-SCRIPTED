@@ -30,6 +30,8 @@ Arduino Settings:
 - Generic ESP8266 Module
 - CPU Frequency 80 Mhz
 - Flash Size 1 M (64k SPIFFS)
+  Due to the limited SPIFFS, the Javascript libraries are fetched from CDN or
+  hosted at your site if you do not like CDNs
 
 Note: HTTP Updater did not work reliable after a while, after adding three
       delays it finally works now very reliable. The change is in the file:

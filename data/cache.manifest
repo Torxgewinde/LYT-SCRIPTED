@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# 2017-01-14:v1
+# v3
 
 CACHE:
 http://lyt.naaa.de/spectrum.css
@@ -10,13 +10,17 @@ http://lyt.naaa.de/images/ajax-loader.gif
 http://lyt.naaa.de/jquery-2.1.4.min.js
 http://lyt.naaa.de/jquery.mobile-1.4.5.min.css
 http://lyt.naaa.de/offline.htm
+/
+/index.htm
+/styles.css
+/scripts.js
 
 NETWORK:
 /all
-/fire
 /color
 /config.json
 /reset
+/state
 
 FALLBACK:
 / http://lyt.naaa.de/offline.htm

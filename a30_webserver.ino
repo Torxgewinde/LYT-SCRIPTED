@@ -152,16 +152,13 @@ void handleAllGET() {
   JsonObject& root = jsonBuffer.createObject();
   String json;
 
-  switch(state) {
-    case CONSTANTCOLOR:
-      root["state"] = "constantcolor";
+  // translate current state to string
+  for(int i=0; i<LENGTH_OF(state_map); i++) {
+    if(state_map[i].state == state) {
+      root["state"] = state_map[i].state_as_string;
+      root["state_human_readable"] = state_map[i].human_readable_string;
       break;
-    case REMOTEURL:
-      root["state"] = "remotecontrol";
-      break;
-    default:
-      root["state"] = "undefined";
-      break;
+    }
   }
   
   root["red"] = g_red;
@@ -184,17 +181,23 @@ Return Value: -
 void handleStateGET() {
   if( server.hasArg("state") ) {
     Log("new state to be set: " + server.arg("state"));
-    
-    if( server.arg("state") == "constantcolor" ) {
-      state = CONSTANTCOLOR;
-    }
 
-    if( server.arg("state") == "remotecontrol" ) {
-      state = REMOTEURL;
+    for(int i=0; i<LENGTH_OF(state_map); i++) {
+      if(state_map[i].state_as_string == server.arg("state")) {
+        state = state_map[i].state;
+        break;
+      }
     }
   }
 
-  server.send(200, "text/plain", "---");
+  for(int i=0; i<LENGTH_OF(state_map); i++) {
+    if(state_map[i].state == state) {
+      server.send(200, "text/plain", state_map[i].human_readable_string);
+      return;
+    }
+  }
+
+  server.send(200, "text/plain", "unknown state");
 }
 
 /******************************************************************************
@@ -214,7 +217,8 @@ void handleConfigGET() {
      server.hasArg("startupcolor_r") &&
      server.hasArg("startupcolor_g") &&
      server.hasArg("startupcolor_b") &&
-     server.hasArg("startupcolor")) {
+     server.hasArg("startupcolor") &&
+     server.hasArg("delay_before_going_remotecontrolled")) {
 
     Log("a new config was submitted");
 

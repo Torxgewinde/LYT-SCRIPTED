@@ -38,6 +38,9 @@ void setup_wifi() {
   
   wifiManager.setConfigPortalTimeout(300);
   wifiManager.autoConnect("LYT8266", "addiwau+1");
+
+  WiFi.forceSleepWake();
+  WiFi.setOutputPower(20.5);
 }
 
 /******************************************************************************
