@@ -167,6 +167,7 @@ void handleAllGET() {
 
   root["uptime"] = millis();
   root["heap"] = ESP.getFreeHeap();
+  root["RSSI"] = WiFi.RSSI();
 
   root.printTo(json);
   server.send(200, "text/json", json);  

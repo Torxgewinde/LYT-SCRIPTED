@@ -23,7 +23,11 @@
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
-#include <WiFiManager.h>   
+#include <WiFiManager.h>
+#include <WiFiUdp.h>
+
+WiFiUDP Udp;
+uint8_t buffer[10] = {1};
 
 /******************************************************************************
 Description.: prepare the WiFi settings, uses WiFi Manager Library
@@ -40,6 +44,7 @@ void setup_wifi() {
   wifiManager.autoConnect("LYT8266", "addiwau+1");
 
   WiFi.setOutputPower(20.5);
+  WiFi.setAutoReconnect(true);
 }
 
 /******************************************************************************
@@ -48,5 +53,26 @@ Input Value.: -
 Return Value: -
 ******************************************************************************/
 void loop_wifi() {
-  //nothing to do here
+  
+  //because of having issues with an unresposive connection
+  //just meaningless data traffic will hopefully fix it
+  //a single UDP packet is send to the gateway IP every second
+  static unsigned long then = 0;
+
+  // for using millis be aware of overflow every ~50 days
+  // but using substraction is "overflow-safe"
+  if( millis()-then >= 1000 ) {
+    then = millis();
+
+    //UDP port 9 is supposed to discard packets or it will simply not return
+    //anything because no service is running at the gateway-IP,port9
+    Udp.beginPacket(WiFi.gatewayIP(), 9);
+    Udp.write(buffer, LENGTH_OF(buffer));
+    Udp.endPacket();
+  }
+  
+  if( !WiFi.isConnected() ) {
+    Log("WiFi connection lost, reconnecting. RSSI was: "+ WiFi.RSSI());
+    WiFi.reconnect();
+  }
 }
