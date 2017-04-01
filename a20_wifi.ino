@@ -40,11 +40,10 @@ void setup_wifi() {
   //reset settings - for testing
   //wifiManager.resetSettings();
   
-  wifiManager.setConfigPortalTimeout(300);
+  wifiManager.setConfigPortalTimeout(600);
   wifiManager.autoConnect("LYT8266", "addiwau+1");
 
-  WiFi.setOutputPower(20.5);
-  WiFi.setAutoReconnect(true);
+  Log("WiFi connected, RSSI: "+ String(WiFi.RSSI()));
 }
 
 /******************************************************************************
@@ -56,12 +55,12 @@ void loop_wifi() {
   
   //because of having issues with an unresposive connection
   //just meaningless data traffic will hopefully fix it
-  //a single UDP packet is send to the gateway IP every second
+  //a single UDP packet is send to the gateway IP
   static unsigned long then = 0;
 
   // for using millis be aware of overflow every ~50 days
   // but using substraction is "overflow-safe"
-  if( millis()-then >= 1000 ) {
+  if( millis()-then >= 30000 ) {
     then = millis();
 
     //UDP port 9 is supposed to discard packets or it will simply not return
@@ -69,10 +68,7 @@ void loop_wifi() {
     Udp.beginPacket(WiFi.gatewayIP(), 9);
     Udp.write(buffer, LENGTH_OF(buffer));
     Udp.endPacket();
-  }
-  
-  if( !WiFi.isConnected() ) {
-    Log("WiFi connection lost, reconnecting. RSSI was: "+ WiFi.RSSI());
-    WiFi.reconnect();
+
+    Log("WiFi kept busy, RSSI: "+ String(WiFi.RSSI()) +", Connected: "+ String(WiFi.isConnected()));
   }
 }

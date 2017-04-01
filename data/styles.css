@@ -4,7 +4,7 @@
 }
 
 #staticcolor .sp-picker-container {
-	width: calc(80%);
+	width: 80%;
 	width: calc(100% - 20px);
 }
 	
