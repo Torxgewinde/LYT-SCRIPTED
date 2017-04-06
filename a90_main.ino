@@ -42,6 +42,7 @@ bool loadConfig() {
     g_green = 0;
     g_blue = 0;
     g_delay_before_going_remotecontrolled = 0;
+    g_send_WLAN_keep_alive_packet = true;
     
     return false;
   }
@@ -81,6 +82,8 @@ bool loadConfig() {
     state = REMOTEURL_POSTPONED;
   }
   g_delay_before_going_remotecontrolled = json["delay_before_going_remotecontrolled"];
+
+  g_send_WLAN_keep_alive_packet = json["send_WLAN_keep_alive_packet"];
   
   g_red = json["r"];
   g_green = json["g"];

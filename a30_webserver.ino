@@ -231,6 +231,7 @@ void handleConfigGET() {
     root["b"] = server.arg("startupcolor_b").toInt();
     root["hexcolor"] = server.arg("startupcolor");
     root["delay_before_going_remotecontrolled"] = server.arg("delay_before_going_remotecontrolled");
+    root["send_WLAN_keep_alive_packet"] = g_send_WLAN_keep_alive_packet;
 
     // store to file
     File fsConfig = SPIFFS.open("/config.json", "w");

@@ -60,7 +60,7 @@ void loop_wifi() {
 
   // for using millis be aware of overflow every ~50 days
   // but using substraction is "overflow-safe"
-  if( millis()-then >= 30000 ) {
+  if( g_send_WLAN_keep_alive_packet && (millis()-then >= 30000) ) {
     then = millis();
 
     //UDP port 9 is supposed to discard packets or it will simply not return

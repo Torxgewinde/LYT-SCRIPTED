@@ -10,23 +10,24 @@ $.ajaxSetup({timeout: 6000});
 var pollTimer; 
 
 function pollAll() {
-	$.get("/all", function( data ) {			
+	$.get("/all", null).done( function( data ) {
+		/* hide the loader icon */
+		$.mobile.loading( "hide" );
+		
 		var color = tinycolor("rgb("+data.red+","+data.green+","+data.blue);
 		
-		// only update the colorpicker if color has changed
-		//if (color.toHexString() != $("#flat").spectrum('get').toHexString()) {
-			$("#flat").spectrum("set", color);
-			$("#flat").spectrum("reflow");
-			$("#flat").spectrum("set", color);
-			$("#flat").spectrum("show");
-		//}
+		$("#flat").spectrum("set", color);
+		$("#flat").spectrum("reflow");
+		$("#flat").spectrum("show");
 
 		var txtcolor = tinycolor.mostReadable(color, ["#afafaf", "#000"]);
 		$("#cvalue,#current_color").css("background-color", color.toHexString());
 		$("#cvalue,#current_color").css("color", txtcolor.toHexString());
 		$("#cvalue,#current_color").text("R: "+data.red+", "+"G: "+data.green+", "+"B: "+data.blue);
 
-		debug("Uptime: "+ data.uptime.toString());
+		var d = new Date();
+		d.setTime(data.uptime);
+		debug("Up: "+ d.toUTCString().split(" ")[4] +", RSSI: "+data.RSSI.toString());
 		
 		$("#current_state").text(data.state_human_readable);
 	});
@@ -80,6 +81,14 @@ function myGet(URL, func) {
 }
 
 $( document ).ready(function() {
+	/* show loader */
+	$.mobile.loading( "show", {
+		text: "Connecting...",
+		textVisible: true,
+		theme: "b",
+		textonly: false
+	});
+	
 	/* start a timer */
 	pollTimer = setInterval(pollAll, 1000);
 

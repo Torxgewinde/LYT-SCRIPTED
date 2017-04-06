@@ -55,6 +55,8 @@ String g_remoteurl;
 /* an optional delay in seconds before switching from bootup to remoteURL */
 uint16_t g_delay_before_going_remotecontrolled;
 
+bool g_send_WLAN_keep_alive_packet;
+
 /* Storage for most recent logging messages */
 std::deque<String> log_messages;
 
