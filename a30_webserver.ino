@@ -185,6 +185,12 @@ void handleStateGET() {
 
     for(int i=0; i<LENGTH_OF(state_map); i++) {
       if(state_map[i].state_as_string == server.arg("state")) {
+
+        if(state == REMOTEURL_POSTPONED) {
+          Log("Polling remote URL from now on and set g_delay_before_going_remotecontrolled from "+ String(g_delay_before_going_remotecontrolled) +" to 0");
+          g_delay_before_going_remotecontrolled = 0;
+        }
+                
         state = state_map[i].state;
         break;
       }
