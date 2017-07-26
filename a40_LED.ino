@@ -20,11 +20,16 @@
 #                                                                              #
 *******************************************************************************/
 
+#include <Ticker.h>
+
 #define RED_PIN 13
 #define GREEN_PIN 12
 #define BLUE_PIN 14
 #define WHITE_PIN 2
 #define POWER_ENABLE_LED 15
+
+// how often will the animation ticker call the callback, defined in ms
+#define ANI_RES 10
 
 /******************************************************************************
 Description.: The visual impression of the LEDs is not linear like the PWM,
@@ -80,7 +85,94 @@ void setLeds(uint8_t red, uint8_t green, uint8_t blue) {
   }
   
   //without delay I had issues when setting all values 0
-  delay(1);
+  //delay(1);
+}
+
+/******************************************************************************
+Description.: animation function performs a fade animation
+Input Value.: a pointer to context variables required for the animation
+Return Value: -
+******************************************************************************/
+struct _animation_context {
+  uint8_t next_red;
+  uint8_t next_green;
+  uint8_t next_blue;
+
+  uint8_t previous_red;
+  uint8_t previous_green;
+  uint8_t previous_blue;
+
+  uint8_t current_red;
+  uint8_t current_green;
+  uint8_t current_blue;
+
+  bool busy;
+  uint32_t ani_time;
+  uint32_t ani_duration;
+
+  Ticker animationTicker;
+} animation_context;
+
+void animation(_animation_context *ctx) {
+  float progress;
+
+  ctx->ani_time += ANI_RES;
+  progress = _min(1.0, (float)ctx->ani_time / (float)ctx->ani_duration);
+
+  ctx->current_red = ctx->previous_red + (ctx->next_red - ctx->previous_red) * progress;
+  ctx->current_green = ctx->previous_green + (ctx->next_green - ctx->previous_green) * progress;
+  ctx->current_blue = ctx->previous_blue + (ctx->next_blue - ctx->previous_blue) * progress;
+
+  setLeds(ctx->current_red, ctx->current_green, ctx->current_blue);
+
+  if( progress >= 1.0 ) {
+    // stop timer, we reached 100%
+    ctx->animationTicker.detach();
+    ctx->ani_time = 0;
+    ctx->previous_red = ctx->next_red;
+    ctx->previous_green = ctx->next_green;
+    ctx->previous_blue = ctx->next_blue;
+    ctx->busy = false;
+  }
+}
+
+/******************************************************************************
+Description.: set the LEDs, not immediatly but fading from previous color
+              to the specified within the specified time
+Input Value.: brightness level for RGB, if R=G=B the white LEDs are used
+              fade_time is the time of animation in milliseconds
+Return Value: -
+******************************************************************************/
+void setLedsAnimated(uint8_t red, uint8_t green, uint8_t blue, uint32_t duration) {
+
+  // guard against restarting the animation unless new target color specified
+  if( (red == animation_context.next_red) && (green == animation_context.next_green) && (blue == animation_context.next_blue) ) {
+    // leave if we already currently animate towards or already have set desired color
+    return;
+  }
+
+  // if animation is still running
+  if(animation_context.busy) {
+    // already/still busy: stop timer first
+    animation_context.animationTicker.detach();
+
+    // restart animation from current colors
+    animation_context.previous_red = animation_context.current_red;
+    animation_context.previous_green = animation_context.current_green;
+    animation_context.previous_blue = animation_context.current_blue;
+    
+    animation_context.busy = false;
+  }
+
+  animation_context.ani_duration = duration;
+  animation_context.ani_time = 0;
+
+  // animate towards this color
+  animation_context.next_red = red;
+  animation_context.next_green = green;
+  animation_context.next_blue = blue;
+
+  animation_context.animationTicker.attach_ms(ANI_RES, animation, &animation_context);
 }
 
 /******************************************************************************
@@ -98,8 +190,23 @@ void setup_LEDs() {
   
   analogWriteFreq(500);
   analogWriteRange(255);
+
+  animation_context.next_red = 0;
+  animation_context.next_green = 0;
+  animation_context.next_blue = 0;
   
-  setLeds(g_red, g_green, g_blue);
+  animation_context.previous_red = 0;
+  animation_context.previous_green = 0;
+  animation_context.previous_blue = 0;
+  
+  animation_context.current_red = 0;
+  animation_context.current_green = 0;
+  animation_context.current_blue = 0;
+
+  animation_context.busy = false;
+
+  setLedsAnimated(g_red, g_green, g_blue, 1000);
+  
   digitalWrite(POWER_ENABLE_LED, 1);
 }
 
@@ -111,12 +218,13 @@ Return Value: -
 void loop_LEDs() {  
   switch(state) {
     case BOOTUP:
-      setLeds(255,255,255);
+      setLeds(g_red, g_green, g_blue);
       break;
       
     case CONSTANTCOLOR:
     case REMOTEURL:
-      setLeds(g_red,g_green,g_blue);
+      setLedsAnimated(g_red, g_green, g_blue, 1000);
+      //setLeds(g_red, g_green, g_blue);
       break;
 
     default:

@@ -143,15 +143,25 @@ Return Value: -
 ******************************************************************************/
 void setup(void){
   state = BOOTUP;
-  SPIFFS.begin();
-  //SPIFFS.format();
-  
+
   Serial.begin(115200);
   Serial.println("LYT8266 starting up\nCompiled at: " __DATE__ " - " __TIME__);
 
   log_messages.resize(LOG_LENGTH, "-");
   Log("LYT8266 starting up");
   Log("Compiled at: " __DATE__ " - " __TIME__);
+  
+  if( !SPIFFS.begin() ) {
+    Log("SPIFFS not mounted correctly, retrying...");
+    delay(1000);
+    if( !SPIFFS.begin() ) {
+      Log("mounting failed twice, formatting and then restarting");
+      SPIFFS.format();
+      ESP.restart();
+    } else {
+      Log("SPIFFS mounted at second try, proceeding as usual");
+    }
+  }
 
   // read configuration file
   bool r = loadConfig();
