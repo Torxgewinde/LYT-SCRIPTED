@@ -160,12 +160,11 @@ void setLedsAnimated(uint8_t red, uint8_t green, uint8_t blue, uint32_t duration
     animation_context.previous_red = animation_context.current_red;
     animation_context.previous_green = animation_context.current_green;
     animation_context.previous_blue = animation_context.current_blue;
-    
-    animation_context.busy = false;
   }
 
   animation_context.ani_duration = duration;
   animation_context.ani_time = 0;
+  animation_context.busy = true;
 
   // animate towards this color
   animation_context.next_red = red;
