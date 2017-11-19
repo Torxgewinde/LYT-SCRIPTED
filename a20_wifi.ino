@@ -41,7 +41,7 @@ void setup_wifi() {
   //wifiManager.resetSettings();
   
   wifiManager.setConfigPortalTimeout(600);
-  wifiManager.autoConnect("LYT8266", "addiwau+1");
+  wifiManager.autoConnect("LYT8266");
 
   Log("WiFi connected, RSSI: "+ String(WiFi.RSSI()));
 }

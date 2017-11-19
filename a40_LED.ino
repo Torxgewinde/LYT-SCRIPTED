@@ -113,8 +113,9 @@ struct _animation_context {
   Ticker animationTicker;
 } animation_context;
 
-void animation(_animation_context *ctx) {
+void animation(void *vctx) {
   float progress;
+  _animation_context *ctx = (_animation_context *)vctx;
 
   ctx->ani_time += ANI_RES;
   progress = _min(1.0, (float)ctx->ani_time / (float)ctx->ani_duration);
@@ -171,7 +172,7 @@ void setLedsAnimated(uint8_t red, uint8_t green, uint8_t blue, uint32_t duration
   animation_context.next_green = green;
   animation_context.next_blue = blue;
 
-  animation_context.animationTicker.attach_ms(ANI_RES, animation, &animation_context);
+  animation_context.animationTicker.attach_ms(ANI_RES, animation, (void *)&animation_context);
 }
 
 /******************************************************************************
