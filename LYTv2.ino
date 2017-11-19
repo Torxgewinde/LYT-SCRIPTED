@@ -21,7 +21,7 @@
 ********************************************************************************
 
 Compiler:
-- Arduino 1.6.12
+- Arduino 1.8.2
 
 Hardware: 
 - LYT8266 Lamp
@@ -30,28 +30,9 @@ Arduino Settings:
 - Generic ESP8266 Module
 - CPU Frequency 80 Mhz
 - Flash Size 1 M (64k SPIFFS)
+- Flash Mode is DIO
+- Crystal Frequency is 26 MHz
   Due to the limited SPIFFS, the Javascript libraries are fetched from CDN or
   hosted at your site if you do not like CDNs
-
-Note: HTTP Updater did not work reliable after a while, after adding three
-      delays it finally works now very reliable. The change is in the file:
-      .arduino15/packages/esp8266/hardware/esp8266/2.3.0/cores/esp8266/Updater.cpp
-
-      ...
-      bool UpdaterClass::_writeBuffer(){
-
-      if(!_async) yield();
-      delay(10);
-      bool result = ESP.flashEraseSector(_currentAddress/FLASH_SECTOR_SIZE);
-      if(!_async) yield();
-      delay(10);
-      if (result) {
-         result = ESP.flashWrite(_currentAddress, (uint32_t*) _buffer, _bufferLen);
-      }
-      if(!_async) yield();
-      delay(10);
-
-      if (!result) {
-      ...
-
+  
 *******************************************************************************/
