@@ -27,7 +27,7 @@
 #define LENGTH_OF(x) (sizeof(x)/sizeof(x[0]))
 
 /* current state of the device */
-enum STATES {UNDEF=0, CONSTANTCOLOR, REMOTEURL, REMOTEURL_POSTPONED, BOOTUP, FLASH};
+enum STATES {UNDEF=0, CONSTANTCOLOR, REMOTEURL, REMOTEURL_POSTPONED, BOOTUP, FLASH, DISCO};
 struct {
   STATES state;
   String human_readable_string;
@@ -38,7 +38,8 @@ struct {
   { REMOTEURL, "Polling Remote Address", "remotecontrol" },
   { REMOTEURL_POSTPONED, "Waiting before polling", "remotecontrol_postponed" },
   { BOOTUP, "Booting up...", "bootup" },
-  { FLASH, "Flashing Firmware...", "flash" }
+  { FLASH, "Flashing Firmware...", "flash" },
+  { DISCO, "Disco Mode", "disco" }
 };
 STATES state = UNDEF;
 

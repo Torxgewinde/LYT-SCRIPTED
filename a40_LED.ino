@@ -227,6 +227,12 @@ void loop_LEDs() {
       //setLeds(g_red, g_green, g_blue);
       break;
 
+    case DISCO:
+      if(animation_context.busy == false) {
+        setLedsAnimated(random(0, 255), random(0, 255), random(0, 255), random(50, 500));
+      }
+      break;
+
     default:
       ;
   }
