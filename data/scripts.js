@@ -186,4 +186,28 @@ $( document ).ready(function() {
 			$.mobile.back();
 		});
 	});
+	
+	/* draw visualization */
+	var stage = new createjs.Stage("visu");
+	var width = 64;
+	var heigth = 64;
+	
+	/*var background = new createjs.Shape()
+        background.graphics.beginFill("#000").drawRoundRect(0, 0, width, height, 2);
+        stage.addChild(background);
+	*/
+	var dotSize = 3;
+	var LEDCount = 24;
+	
+	var LEDs = Array();
+	for(i=0; i<LEDCount; i++) {
+		var thisLED = new createjs.Shape()
+		thisLED.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, dotSize);
+		var angle = ((Math.PI/2) - (i/LEDCount) * 2*Math.PI);
+		thisLED.x = width/2 + ((width/2 - dotSize-1) * Math.cos(angle));
+		thisLED.y = heigth/2 - ((heigth/2 - dotSize-1) * Math.sin(angle));
+		stage.addChild(thisLED);
+		LEDs.push(thisLED);
+	}
+	stage.update();
 });

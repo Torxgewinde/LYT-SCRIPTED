@@ -20,6 +20,9 @@
 	<link rel="stylesheet" type="text/css" href="http://lyt.naaa.de/spectrum.css">
 	<script type="text/javascript" src="http://lyt.naaa.de/spectrum.js"></script>
 	
+	<!-- for working with canvas, note: do not use the HTTPS servers or cache.manifest will fail -->
+	<script type="text/javascript" src="http://code.createjs.com/easeljs-0.8.2.min.js"></script>
+	
 	<!-- custom styles and scripts -->
 	<script type="text/javascript" src="/scripts.js"></script>
 	<link rel="stylesheet" type="text/css" href="/styles.css">
@@ -43,10 +46,12 @@
 			<ul data-role="listview">
 				<li><div id="current_state" style="text-align: center">Current State</div></li>
 				<li><div id="current_color" style="text-align: center">Color Value</div></li>
+				<li><div style="text-align: center"><canvas id="visu" width="64" height="64"></canvas></div></li>
 				<li><a class="ui-btn ui-corner-all ui-shadow quickButtons" id="sOn" href="/color?red=255&green=255&blue=255">On</a></li>
 				<li><a class="ui-btn ui-corner-all ui-shadow quickButtons" id="sOff" href="/color?red=0&green=0&blue=0">Off</a></li>
 				<li><a class="ui-btn ui-corner-all ui-shadow quickButtons" id="sRC" href="/state?state=remotecontrol">Remotecontrolled</a></li>
 				<li><a class="ui-btn ui-corner-all ui-shadow quickButtons" id="sCC" href="/state?state=constantcolor">Constant Color</a></li>
+				<li><a class="ui-btn ui-corner-all ui-shadow quickButtons" id="sDI" href="/state?state=disco">Disco Mode</a></li>
 			</ul>
 		</div>
 	
